@@ -78,7 +78,7 @@ class DBPacemaker:
 
     @staticmethod
     def _get_path():
-        path_list = os.path.splitext(__file__)[0].strip('/').split('/')[1:]
+        path_list = os.path.splitext(__file__)[0].strip('/').split('/')[-2:]
         path = '.'.join(_ for _ in path_list)
         return path
 
@@ -134,7 +134,7 @@ class DBPacemaker:
 
         task = {
             'id': 'keep_db_connection',
-            'func': f'{cls._get_path()}:DatabasePacemaker.awake',
+            'func': f'{cls._get_path()}:DBPacemaker.awake',
             'kwargs': {'config': config, 'modules': modules, 'display': display},
             'trigger': 'interval',
             'seconds': interval
