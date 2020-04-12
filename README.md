@@ -10,7 +10,7 @@
 
 - Import package at `app.py`
 ```python
-    from flask_dbpacemaker import DBPacemaker
+from flask_dbpacemaker import DBPacemaker
 ```
 
 - Append this after you declare `config` and `app`
