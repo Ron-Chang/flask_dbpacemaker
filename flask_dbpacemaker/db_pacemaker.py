@@ -5,7 +5,8 @@ from flask_apscheduler import APScheduler
 
 class DBPacemaker:
     """
-    Keep multi-database awake.
+    Purpose: Keep multi-database awake during a long term crawler assignment.
+    目的: 保持（複數）資料庫連線，當爬蟲進行長時間睡眠時。
     Based on flask-sqlalchemy and Flask-APScheduler
     """
     @staticmethod
@@ -54,25 +55,23 @@ class DBPacemaker:
 
     @staticmethod
     def _poke(db, table, display):
-        obj = table.query.first()
+        table.query.first()
         if display is False:
             return
         now = datetime.now().strftime('%Y-%m-%d %H:%M:%S,%f')[:-3]
-        print(f'[{now}] [{"POKE":8}] [ * DB: {db.upper():15} | {table.__name__}]')
+        print(f'[{now}] [{"POKE":7}👻] [ * {db.upper()} {table.__name__}]')
 
     @classmethod
-    def awake(cls, config, modules, display):
-        """Proceed every db which is available and random query a table to keep connection.
+    def awake(cls, config, display):
+        """
+        Proceed every db which is available and random query a table to keep connection.
+        對每個資料庫，做一次亂數取表單，透過請求表單第一個物件，保持db連線狀態。
+
         :params config: flask config
         :type config: <class 'config.Config'>
-
-        :params modules: db models pathname, it supposed to split by '.'
-        :type modules: list['modelspath_1.models', 'modelspath_2.models']
-
-        :return: keep db connection
         """
         db_binds = cls._get_db_binds(config)
-        models_list = cls._get_models_list(modules)
+        models_list = cls._get_models_list(getattr(config, 'MODELS_PATH_LIST', list()))
         for db, table in cls._get_random_tables(db_binds, models_list).items():
             cls._poke(db=db, table=table, display=display)
 
@@ -85,14 +84,7 @@ class DBPacemaker:
     @staticmethod
     def _launch_scheduler(app, scheduler, task):
         """
-        若 scheduler 不為空
-            - 暫停scheduler
-            - 插入任務
-            - 重啟scheduler
-        否則
-            - 建立實體
-            - 重啟app
-            - 啟動scheduler
+        判斷是否建立 scheduler 實體，插入任務，並啟動 scheduler
         """
         if scheduler:
             scheduler.pause()
@@ -105,19 +97,16 @@ class DBPacemaker:
             scheduler.start()
 
     @classmethod
-    def run(cls, app, config, modules, interval, display=False, scheduler=None):
-        """Check scheduler, append task
+    def run(cls, app, config, display=False, scheduler=None):
+        """
+        Check scheduler for launching and appending awake task.
+        檢查載入scheduler，插入喚醒db任務。
+
         :params app: flask app
         :type app: <class 'flask.app.Flask'>
 
         :params config: flask config
         :type config: <class 'config.Config'>
-
-        :params modules: db models pathname, it supposed to split by '.'
-        :type modules: list, ['models_path_1.models', 'models_path_2.models']
-
-        :params interval: awake task interval, unit=seconds
-        :type interval: int
 
         :params display: to display activities of every poke
         :type display: bool
@@ -125,19 +114,19 @@ class DBPacemaker:
         :params scheduler: flask_apscheduler
         :type scheduler: <class 'flask_apscheduler.scheduler.APScheduler'>
         """
+        interval = getattr(config, 'POKE_DB_INTERVAL', 60 * 60)
+
         now = datetime.now().strftime('%Y-%m-%d %H:%M:%S,%f')[:-3]
         start = (datetime.now() + timedelta(seconds=interval)).strftime('%Y-%m-%d %H:%M:%S')
         display_mode = 'on' if display else 'off'
-        print(f'[{now}] [{"INFO":8}] [ * Database Pacemaker is active 👻!]')
+        print(f'[{now}] [{"INFO":8}] [ * DBPacemaker is active 👻!]')
         print(f'[{now}] [{"INFO":8}] [ * Display mode: {display_mode}]')
-        print(f'[{now}] [{"INFO":8}] [ * First round start at {start}]')
-
+        print(f'[{now}] [{"INFO":8}] [ * Start at {start}]')
         task = {
             'id': 'keep_db_connection',
             'func': f'{cls._get_path()}:DBPacemaker.awake',
-            'kwargs': {'config': config, 'modules': modules, 'display': display},
+            'kwargs': {'config': config, 'display': display},
             'trigger': 'interval',
             'seconds': interval
         }
-
         cls._launch_scheduler(app=app, scheduler=scheduler, task=task)
