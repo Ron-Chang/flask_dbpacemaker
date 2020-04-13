@@ -10,11 +10,20 @@ class DBPacemaker:
     Based on flask-sqlalchemy and Flask-APScheduler
     """
     @staticmethod
-    def _get_models_list(modules):
+    def _get_now():
+        return datetime.now().strftime('%Y-%m-%d %H:%M:%S,%f')[:-3]
+
+    @classmethod
+    def _get_models_list(cls, modules):
         models = list()
+        now = cls._get_now()
         for module in modules:
-            importlib.import_module(module)
-            models.append(sys.modules[module])
+            try:
+                importlib.import_module(module)
+                models.append(sys.modules[module])
+            except Exception as e:
+                print(f'[{now}] [{"ERROR":7}🚨] [ * {e}]')
+                continue
         return models
 
     @staticmethod
@@ -53,12 +62,12 @@ class DBPacemaker:
             return None
         return {db: cls._random_pick(tables) for db, tables in tables_by_db.items()}
 
-    @staticmethod
-    def _poke(db, table, display):
+    @classmethod
+    def _poke(cls, db, table, display):
         table.query.first()
         if display is False:
             return
-        now = datetime.now().strftime('%Y-%m-%d %H:%M:%S,%f')[:-3]
+        now = cls._get_now()
         print(f'[{now}] [{"POKE":7}👻] [ * {db.upper()} {table.__name__}]')
 
     @classmethod
@@ -69,10 +78,22 @@ class DBPacemaker:
 
         :params config: flask config
         :type config: <class 'config.Config'>
+
+        :params display: to display activities of every poke
+        :type display: bool
         """
+        now = cls._get_now()
         db_binds = cls._get_db_binds(config)
-        models_list = cls._get_models_list(getattr(config, 'MODELS_PATH_LIST', list()))
-        for db, table in cls._get_random_tables(db_binds, models_list).items():
+        models_path_list = getattr(config, 'MODELS_PATH_LIST', None)
+        if not models_path_list:
+            raise Exception(f'[ * = DBPacemaker = "MODELS_PATH_LIST" is empty!]')
+        models_list = cls._get_models_list(models_path_list)
+        if not models_list:
+            raise Exception(f'[ * = DBPacemaker = No available models!]')
+        random_tables = cls._get_random_tables(db_binds, models_list)
+        if not random_tables:
+            raise Exception(f'[ * = DBPacemaker = cannot source any tables!]')
+        for db, table in random_tables.items():
             cls._poke(db=db, table=table, display=display)
 
     @staticmethod
@@ -116,7 +137,7 @@ class DBPacemaker:
         """
         interval = getattr(config, 'POKE_DB_INTERVAL', 60 * 60)
 
-        now = datetime.now().strftime('%Y-%m-%d %H:%M:%S,%f')[:-3]
+        now = cls._get_now()
         start = (datetime.now() + timedelta(seconds=interval)).strftime('%Y-%m-%d %H:%M:%S')
         display_mode = 'on' if display else 'off'
         print(f'[{now}] [{"INFO":8}] [ * DBPacemaker is active 👻!]')
