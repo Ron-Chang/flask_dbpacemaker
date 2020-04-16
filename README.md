@@ -14,11 +14,13 @@
 `POKE_DB_INTERVAL` default value which is __one hour__
 
 ```python
+DB_PACEMAKER_SWITCH = True if os.environ['ENVIRONMENT'] == 'develop' else False
 MODELS_PATH_LIST = ['model_path.models']
 POKE_DB_INTERVAL = 60 * 60  # seconds
 ```
 
 - Import package at `app.py`
+
 ```python
 from flask_dbpacemaker import DBPacemaker
 ```
@@ -36,4 +38,4 @@ DBPacemaker.run(app, config, True, secheduler=secheduler)
 
 Note: The job permanent trigger is `'interval'`.
 
-Cheers!🎉
+Cheers! 🎉
