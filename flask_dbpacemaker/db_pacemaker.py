@@ -135,19 +135,22 @@ class DBPacemaker:
         :params scheduler: flask_apscheduler
         :type scheduler: <class 'flask_apscheduler.scheduler.APScheduler'>
         """
+        switch = getattr(config, 'DB_PACEMAKER_SWITCH', True)
         interval = getattr(config, 'POKE_DB_INTERVAL', 60 * 60)
 
-        now = cls._get_now()
+        now = datetime.now().strftime('%Y-%m-%d %H:%M:%S,%f')[:-3]
         start = (datetime.now() + timedelta(seconds=interval)).strftime('%Y-%m-%d %H:%M:%S')
         display_mode = 'on' if display else 'off'
-        print(f'[{now}] [{"INFO":8}] [ * DBPacemaker is active 👻!]')
-        print(f'[{now}] [{"INFO":8}] [ * Display mode: {display_mode}]')
-        print(f'[{now}] [{"INFO":8}] [ * Start at {start}]')
-        task = {
-            'id': 'keep_db_connection',
-            'func': f'{cls._get_path()}:DBPacemaker.awake',
-            'kwargs': {'config': config, 'display': display},
-            'trigger': 'interval',
-            'seconds': interval
-        }
-        cls._launch_scheduler(app=app, scheduler=scheduler, task=task)
+        status = 'is activated 👻!' if switch else 'is not activated 🚨!'
+        print(f'[{now}] [{"INFO":8}] [ * DBPacemaker {status}]')
+        if switch:
+            print(f'[{now}] [{"INFO":8}] [ * Display mode: {display_mode}]')
+            print(f'[{now}] [{"INFO":8}] [ * Start at {start}]')
+            task = {
+                'id': 'keep_db_connection',
+                'func': f'{cls._get_path()}:DBPacemaker.awake',
+                'kwargs': {'config': config, 'display': display},
+                'trigger': 'interval',
+                'seconds': interval
+            }
+            cls._launch_scheduler(app=app, scheduler=scheduler, task=task)
