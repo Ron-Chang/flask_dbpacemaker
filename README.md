@@ -10,7 +10,8 @@
 ## - How to use
 
 - Set confing.py
->`MODELS_PATH_LIST` __is required__  
+>`DB_PACEMAKER_SWITCH` __is required__  
+`MODELS_PATH_LIST` __is required__  
 `POKE_DB_INTERVAL` default value which is __one hour__
 
 ```python
