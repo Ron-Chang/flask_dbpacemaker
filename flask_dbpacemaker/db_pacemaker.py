@@ -71,7 +71,7 @@ class DBPacemaker:
         Proceed every db which is available and random query a table to keep connection.
         對每個資料庫，做一次亂數取表單，透過請求表單第一個物件，保持db連線狀態。
 
-        :params config: flask config
+        :param config: flask config
         :type config: <class 'config.Config'>
         """
         db_binds = cls._get_db_binds(config)
@@ -106,16 +106,16 @@ class DBPacemaker:
         Check scheduler for launching and appending awake task.
         檢查載入scheduler，插入喚醒db任務。
 
-        :params app: flask app
+        :param app: flask app
         :type app: <class 'flask.app.Flask'>
 
-        :params config: flask config
+        :param config: flask config
         :type config: <class 'config.Config'>
 
-        :params display: to display activities of every poke
+        :param display: to display activities of every poke
         :type display: bool
 
-        :params scheduler: flask_apscheduler
+        :param scheduler: flask_apscheduler
         :type scheduler: <class 'flask_apscheduler.scheduler.APScheduler'>
         """
         switch = getattr(config, 'DB_PACEMAKER_SWITCH', True)
