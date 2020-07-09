@@ -8,7 +8,7 @@ Flask-SQLAlchemy>=2.3.2
 
 ## - How to use
 
-### 1. Add setting into config.py
+#### 1. Add setting into config.py
 - `DB_PACEMAKER_SWITCH` __is required__
 - `MODELS_PATH_LIST` __is required__
 - `POKE_DB_INTERVAL` default: 1 hour.
@@ -20,18 +20,13 @@ MODELS_PATH_LIST = ['spyder_common.models']
 POKE_DB_INTERVAL = 60 * 60
 ```
 
-### 2. Import package at `app.py`
-
-```python
-from flask_dbpacemaker import DBPacemaker
-```
-
-- Append this after you declared `config` and `app`
+#### 2. Establish in `app.py`
+>Note: Append this after you declared `config` and `app`
 
 ```python
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from flask_dbpacemaker import DBPacemaker
+from flask_dbpacemaker import DBPacemaker  # import package
 from config import Config
 
 app = Flask(__name__)
@@ -40,15 +35,15 @@ app.config.from_object(config)
 
 db = SQLAlchemy(app)
 
-DBPacemaker.run(app, db=db, config=config)
+DBPacemaker.run(app, db=db, config=config)  # setup here
 ```
 
-- If you've set a scheduler, just add it as the following.
+- If you've set a scheduler
 ```python
-DBPacemaker.run(app, db=db, config=config, display=True, secheduler=secheduler)
+DBPacemaker.run(app, db=db, config=config, secheduler=your_flask_apscheduler)
 ```
 
-__Note: The job permanent trigger is `'interval'`.__
+_Note: The job permanent trigger is `interval`._
 
 If you like my work, please consider buying me a coffee or [PayPal](https://paypal.me/RonDevStudio?locale.x=zh_TW)
 Thanks for your support! Cheers! 🎉
