@@ -1,4 +1,4 @@
-import os, sys, inspect, importlib, random
+import os, sys, inspect, importlib, random, sqlalchemy
 from datetime import datetime, timedelta
 from flask_apscheduler import APScheduler
 
@@ -55,15 +55,18 @@ class DBPacemaker:
 
     @staticmethod
     def _poke(db, table, db_name, display):
+        now = datetime.now().strftime('%Y-%m-%d %H:%M:%S,%f')[:-3]
         try:
             table.query.first()
-        except:
+            if display:
+                print(f'[{now}] [{"POKE":8}] [ * 👻 {db_name.upper()} {table.__name__}]')
+        except sqlalchemy.exc.ProgrammingError:
+            print(f'[{now}] [{"WARNING":8}] [ * 🐛 Cannot find {db_name.upper()} {table.__name__}]')
+            db.session.rollback()
+        except Exception as e:
+            print(f'[{now}] [{"WARNING":8}] [ * 🚨 {e}]')
             db.session.rollback()
         db.session.close()
-        if display is False:
-            return
-        now = datetime.now().strftime('%Y-%m-%d %H:%M:%S,%f')[:-3]
-        print(f'[{now}] [{"POKE":7}👻] [ * {db_name.upper()} {table.__name__}]')
 
     @classmethod
     def awake(cls, db, config, display):
@@ -76,11 +79,10 @@ class DBPacemaker:
         """
         db_binds = cls._get_db_binds(config)
         models_list = cls._get_models_list(getattr(config, 'MODELS_PATH_LIST', list()))
-        random_tables = cls._get_random_tables(db_binds, models_list).items()
-        if not random_tables:
-            now = datetime.now().strftime('%Y-%m-%d %H:%M:%S,%f')[:-3]
-            print(f'[{now}] [{"WARNING":7}🐛] [ * Cannot find any tables, please check mysql connection or app config]')
-        for db_name, table in random_tables:
+        if not models_list:
+            raise ImportError('ORM import failed, specify your orm in config.py e.g. MODELS_PATH_LIST = ["path.name"]')
+        random_tables = cls._get_random_tables(db_binds, models_list)
+        for db_name, table in random_tables.items():
             cls._poke(db=db, table=table, db_name=db_name, display=display)
 
     @staticmethod
