@@ -6,6 +6,15 @@ Flask-APScheduler>=1.11.0
 Flask-SQLAlchemy>=2.3.2
 ```
 
+## - Log
+
+|#|      date|version|
+|-|----------|-------|
+|1|2020/12/03| v1.2.3|
+
+#### v1.2.3
+- Fixed `AttributeError: 'NoneType' object has no attribute 'items'` issue due to mysql connection has been terminated.
+
 ## - How to use
 
 #### 1. Add setting into config.py

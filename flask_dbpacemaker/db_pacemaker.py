@@ -76,7 +76,11 @@ class DBPacemaker:
         """
         db_binds = cls._get_db_binds(config)
         models_list = cls._get_models_list(getattr(config, 'MODELS_PATH_LIST', list()))
-        for db_name, table in cls._get_random_tables(db_binds, models_list).items():
+        random_tables = cls._get_random_tables(db_binds, models_list).items()
+        if not random_tables:
+            now = datetime.now().strftime('%Y-%m-%d %H:%M:%S,%f')[:-3]
+            print(f'[{now}] [{"WARNING":7}🐛] [ * Cannot find any tables, please check mysql connection or app config]')
+        for db_name, table in random_tables:
             cls._poke(db=db, table=table, db_name=db_name, display=display)
 
     @staticmethod
