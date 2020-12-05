@@ -12,6 +12,7 @@ Flask-SQLAlchemy>=2.3.2
 |-|----------|-------|
 |1|2020/12/03| v1.2.3|
 |2|2020/12/03| v1.2.4|
+|3|2020/12/05| v1.2.5|
 
 #### v1.2.3
 - Fixed `AttributeError: 'NoneType' object has no attribute 'items'` issue due to mysql connection has been terminated.
@@ -20,6 +21,11 @@ Flask-SQLAlchemy>=2.3.2
 - Handle `sqlalchemy.exc.ProgrammingError`, the problem cause by some specific ORM models not exist in current database.
 - Handle database not found issue.
 - Raise error if `MODELS_PATH_LIST` has not been set properly.
+
+#### v1.2.5
+- Replace new line of the error raise from sqlalchemy.
+- Change datetime format method.
+- Make the code efficient.
 
 ## - How to use
 

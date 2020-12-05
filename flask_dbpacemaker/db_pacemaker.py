@@ -5,10 +5,15 @@ from flask_apscheduler import APScheduler
 
 class DBPacemaker:
     """
-    Purpose: Keep multi-database awake during a long term crawler assignment.
-    目的: 保持（複數）資料庫連線，當爬蟲進行長時間睡眠時。
-    Based on flask-sqlalchemy and Flask-APScheduler
+    Purpose:
+        Keep multi-database awake during a long term crawler assignment.
+        保持（複數）資料庫連線，當爬蟲進行長時間睡眠時。
     """
+    @staticmethod
+    def _get_now(format_=None):
+        now = datetime.now()
+        return now.strftime(format_) if format_ else now.strftime('%F %X,%f')[:-3]
+
     @staticmethod
     def _get_models_list(modules):
         models = list()
@@ -53,18 +58,18 @@ class DBPacemaker:
             return None
         return {db_name: cls._random_pick(tables) for db_name, tables in all_tables.items()}
 
-    @staticmethod
-    def _poke(db, table, db_name, display):
-        now = datetime.now().strftime('%Y-%m-%d %H:%M:%S,%f')[:-3]
+    @classmethod
+    def _poke(cls, db, table, db_name, display):
         try:
             table.query.first()
             if display:
-                print(f'[{now}] [{"POKE":8}] [ * 👻 {db_name.upper()} {table.__name__}]')
+                print(f'[{cls._get_now()}] [{"POKE":8}] [ * Flask-DBPacemaker 👻 {db_name.upper()} {table.__name__}]')
         except sqlalchemy.exc.ProgrammingError:
-            print(f'[{now}] [{"WARNING":8}] [ * 🐛 Cannot find {db_name.upper()} {table.__name__}]')
+            print(f'[{cls._get_now()}] [{"WARNING":8}] [ * Flask-DBPacemaker 🐛 Cannot find {db_name.upper()} {table.__name__}]')
             db.session.rollback()
         except Exception as e:
-            print(f'[{now}] [{"WARNING":8}] [ * 🚨 {e}]')
+            error = str(e).replace('\n', ' ')
+            print(f'[{cls._get_now()}] [{"WARNING":8}] [ * Flask-DBPacemaker 🚨 {error}]')
             db.session.rollback()
         db.session.close()
 
@@ -113,7 +118,7 @@ class DBPacemaker:
         檢查載入scheduler，插入喚醒db任務。
 
         :param app: flask app
-        :type app: <class 'flask.app.Flask'>
+        :type app: flask.app.Flask
 
         :param config: flask config
         :type config: <class 'config.Config'>
@@ -122,24 +127,25 @@ class DBPacemaker:
         :type display: bool
 
         :param scheduler: flask_apscheduler
-        :type scheduler: <class 'flask_apscheduler.scheduler.APScheduler'>
+        :type scheduler: flask_apscheduler.scheduler.APScheduler
         """
         switch = getattr(config, 'DB_PACEMAKER_SWITCH', True)
         interval = getattr(config, 'POKE_DB_INTERVAL', 60 * 60)
 
-        now = datetime.now().strftime('%Y-%m-%d %H:%M:%S,%f')[:-3]
-        start = (datetime.now() + timedelta(seconds=interval)).strftime('%Y-%m-%d %H:%M:%S')
-        display_mode = 'on' if display else 'off'
-        status = 'is activated 👻!' if switch else 'is not activated 🚨!'
-        print(f'[{now}] [{"INFO":8}] [ * DBPacemaker {status}]')
+        status = 'NOT active 🚫!'
         if switch:
-            print(f'[{now}] [{"INFO":8}] [ * Display mode: {display_mode}]')
-            print(f'[{now}] [{"INFO":8}] [ * Start at {start}]')
-            task = {
-                'id': 'keep_db_connection',
-                'func': f'{cls._get_path()}:DBPacemaker.awake',
-                'kwargs': {'db': db, 'config': config, 'display': display},
-                'trigger': 'interval',
-                'seconds': interval
-            }
-            cls._launch_scheduler(app=app, scheduler=scheduler, task=task)
+            status = 'active 💓!'
+            display_mode = "active! ✅" if display else "NOT active! ❌"
+            print(f'[{cls._get_now()}] [{"WARNING":8}] [ * Flask-DBPacemaker Debugger is {display_mode}]')
+            cls._launch_scheduler(
+                app=app,
+                scheduler=scheduler,
+                task={
+                    'id': 'keep_db_connection',
+                    'func': f'{cls._get_path()}:DBPacemaker.awake',
+                    'kwargs': {'db': db, 'config': config, 'display': display},
+                    'trigger': 'interval',
+                    'seconds': interval
+                }
+            )
+        print(f'[{cls._get_now()}] [{"INFO":8}] [ * Flask-DBPacemaker is {status}]')
