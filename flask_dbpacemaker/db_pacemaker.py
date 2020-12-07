@@ -15,8 +15,13 @@ class DBPacemaker:
         return now.strftime(format_) if format_ else now.strftime('%F %X,%f')[:-3]
 
     @staticmethod
-    def _get_models_list(modules):
+    def _get_models_list?!?jedi=0, (config):?!? (o: Any, *_*name: Text*_*, default: Any=...) ?!?jedi?!?
+        modules = getattr(config, 'MODELS_PATH_LIST')
         models = list()
+        if isinstance(modules, str):
+            importlib.import_module(modules)
+            models.append(sys.modules[modules])
+            return models
         for module in modules:
             importlib.import_module(module)
             models.append(sys.modules[module])
@@ -83,12 +88,21 @@ class DBPacemaker:
         :type config: <class 'config.Config'>
         """
         db_binds = cls._get_db_binds(config)
-        models_list = cls._get_models_list(getattr(config, 'MODELS_PATH_LIST', list()))
+        models_list = cls._get_models_list(config)
         if not models_list:
             raise ImportError('ORM import failed, specify your orm in config.py e.g. MODELS_PATH_LIST = ["path.name"]')
         random_tables = cls._get_random_tables(db_binds, models_list)
+        if not random_tables:
+            raise ImportError('ORM import failed, specify your orm in config.py e.g. MODELS_PATH_LIST = ["path.name"]')
         for db_name, table in random_tables.items():
             cls._poke(db=db, table=table, db_name=db_name, display=display)
+
+    @classmethod
+    def _validate(cls, db, config):
+        models_path_list = getattr(config, 'MODELS_PATH_LIST', None)
+        if not models_path_list:
+            raise ImportError('ORM import failed, specify your orm in config.py e.g. MODELS_PATH_LIST = ["path.name"]')
+        cls.awake(db, config, display=False)
 
     @staticmethod
     def _get_path():
@@ -129,13 +143,15 @@ class DBPacemaker:
         :param scheduler: flask_apscheduler
         :type scheduler: flask_apscheduler.scheduler.APScheduler
         """
+        cls._validate(db=db, config=config)
+
         switch = getattr(config, 'DB_PACEMAKER_SWITCH', True)
         interval = getattr(config, 'POKE_DB_INTERVAL', 60 * 60)
 
-        status = 'NOT active 🚫!'
+        status = 'inactive 🚫!'
         if switch:
             status = 'active 💓!'
-            display_mode = "active! ✅" if display else "NOT active! ❌"
+            display_mode = 'active! ✅' if display else 'inactive! ❌'
             print(f'[{cls._get_now()}] [{"WARNING":8}] [ * Flask-DBPacemaker Debugger is {display_mode}]')
             cls._launch_scheduler(
                 app=app,
@@ -149,3 +165,4 @@ class DBPacemaker:
                 }
             )
         print(f'[{cls._get_now()}] [{"INFO":8}] [ * Flask-DBPacemaker is {status}]')
+

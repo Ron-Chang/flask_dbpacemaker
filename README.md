@@ -13,6 +13,7 @@ Flask-SQLAlchemy>=2.3.2
 |1|2020/12/03| v1.2.3|
 |2|2020/12/03| v1.2.4|
 |3|2020/12/05| v1.2.5|
+|4|2020/12/07| v1.2.7|
 
 #### v1.2.3
 - Fixed `AttributeError: 'NoneType' object has no attribute 'items'` issue due to mysql connection has been terminated.
@@ -26,6 +27,9 @@ Flask-SQLAlchemy>=2.3.2
 - Replace new line of the error raise from sqlalchemy.
 - Change datetime format method.
 - Make the code efficient.
+
+#### v1.2.7
+- Add validation, testing awake() before assign the job to APScheduler.
 
 ## - How to use
 
