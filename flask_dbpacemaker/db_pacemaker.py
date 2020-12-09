@@ -15,7 +15,7 @@ class DBPacemaker:
         return now.strftime(format_) if format_ else now.strftime('%F %X,%f')[:-3]
 
     @staticmethod
-    def _get_models_list?!?jedi=0, (config):?!? (o: Any, *_*name: Text*_*, default: Any=...) ?!?jedi?!?
+    def _get_models_list(config):
         modules = getattr(config, 'MODELS_PATH_LIST')
         models = list()
         if isinstance(modules, str):
