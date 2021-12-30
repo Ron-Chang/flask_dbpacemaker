@@ -1,6 +1,5 @@
 .DS_Store
 __pycache__
-setup.py
 Flask_DBPacemaker.egg-info
 dist
 build

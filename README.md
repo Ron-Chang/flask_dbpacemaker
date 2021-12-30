@@ -1,5 +1,6 @@
 # Flask Database Pacemaker
 ```
+tzlocal==2.1
 python_requires>=3.6
 Flask>=1.0.2
 Flask-APScheduler>=1.11.0
@@ -10,10 +11,14 @@ Flask-SQLAlchemy>=2.3.2
 
 |#|      date|version|
 |-|----------|-------|
-|1|2020/12/03| v1.2.3|
-|2|2020/12/03| v1.2.4|
-|3|2020/12/05| v1.2.5|
+|5|2020/12/07| v1.3.2|
 |4|2020/12/07| v1.2.7|
+|3|2020/12/05| v1.2.5|
+|2|2020/12/03| v1.2.4|
+|1|2020/12/03| v1.2.3|
+
+#### v1.3.2
+- Fixed `pytz` `normalize` and `zone` deprecation warning.
 
 #### v1.2.3
 - Fixed `AttributeError: 'NoneType' object has no attribute 'items'` issue due to mysql connection has been terminated.
